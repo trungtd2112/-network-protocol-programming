@@ -1,0 +1,64 @@
+**Hàm recvfrom()
+ssize_t recvfrom(int sockfd, void *buf, size_t len,
+int flags, struct sockaddr *from, socklen_t *fromlen );
++ Nhận dữ liệu từ socket:
+• [IN] sockfd: bộ mô tả tệp socket
+• [OUT] buf: bộ đệm nơi tin nhắn sẽ được lưu trữ
+• [IN] len: kích thước của bộ đệm
+• [IN]flags: cách kiểm soát hoạt động của chức năng recvfrom
+• [OUT] from: địa chỉ của người gửi
+• [OUT] fromlen: kích thước địa chỉ của người gửi
++Return:
+• Thành công: trả về độ dài của dữ liệu nhận được tính bằng byte. Nếu thông tin gửi đến quá dài để vừa với bộ đệm được cung cấp, các byte dư thừa sẽ bị loại bỏ.
+• Lỗi: −1 và đặt errno để chỉ ra lỗi.
+
+**recvfrom ()
+• Sự khác biệt giữa recv () và recvfrom ()
+• Recv (): không cần tham số địa chỉ (vì hai máy chủ đã kết nối rồi)
+• Recvfrom (): cần tham số địa chỉ - không cần kết nối, không
+đáng tin cậy
+
+**recvfrom () - Cờ
+• MSG_PEEK: Nhìn trộm một tin nhắn đến. Dữ liệu được coi là chưa đọc và hàm recvfrom () hoặc tương tự tiếp theo sẽ vẫn trả về dữ liệu này.
+• MSG_OOB: Yêu cầu dữ liệu ngoài băng tần. Ý nghĩa và ngữ nghĩa của dữ liệu ngoài băng là giao thức cụ thể.
+• MSG_WAITALL: Trên SOCK_STREAM socket này yêu cầu khối chức năng cho đến khi có thể trả lại toàn bộ lượng dữ liệu, ngoại trừ:
+• kết nối bị chấm dứt
+• MSG_PEEK đã được chỉ định
+• một lỗi đang chờ xử lý cho ổ cắm
+• một tín hiệu được bắt
+• Sử dụng toán tử OR bitwise (|) để kết hợp nhiều hơn một cờ
+
+**sendto()
+ssize_t sendto(int sockfd, void *buf, size_t len, int flags, struct sockaddr *to, socklen_t *tolen );
+• Đã nhận dữ liệu từ ổ cắm
+• Thông số:
+• [IN] sockfd: bộ mô tả tệp socket
+• [IN] buf: trỏ đến bộ đệm chứa tin nhắn sẽ được gửi đi
+• [IN] len: kích thước của tin nhắn
+• [IN] flags: cách điều khiển chức năng sendto hoạt động
+• [IN] tới: địa chỉ của người nhận
+• [IN] tolen: độ dài của cấu trúc sockaddr được trỏ tới bởi đối số
+• Trở về:
+• Thành công: sẽ trả về độ dài của tin nhắn đã gửi tính bằng byte
+• Lỗi: −1 và đặt errno để chỉ ra lỗi.
+
+**sendto () - Flags
+• MSG_OOB: Gửi dữ liệu ngoài băng tần trên các ổ cắm hỗ trợ dữ liệu ngoài băng.
+• MSG_DONTROUTE: Không sử dụng cổng để gửi gói, chỉ gửi đến các máy chủ trên các mạng được kết nối trực tiếp
+• Sử dụng toán tử OR bitwise (|) để kết hợp nhiều hơn một cờ
+
+**sendto()
+Bộ đệm ổ cắm UDP không thực sự tồn tại
+• Bộ đệm ổ cắm UDP có kích thước bộ đệm gửi
+• Nếu một ứng dụng ghi một gói dữ liệu lớn hơn kích thước bộ đệm gửi socket, EMSGSIZE sẽ được trả về
+
+**conect() với UDP
+• Nếu máy chủ không chạy, máy khách sẽ chặn vĩnh viễn lệnh gọi tới recvfrom () → lỗi không đồng bộ
+• Sử dụng conect() cho ổ cắm UDP
+• Nhưng nó khác với việc gọi connect () trên ổ cắm TCP
+• Gọi connect () trên ổ cắm UDP không tạo kết nối
+• Kernel chỉ kiểm tra bất kỳ lỗi nào ngay lập tức và trở lại ngay lập tức quá trình gọi
+• Chúng tôi không sử dụng sendto() mà thay vào đó write() hoặc send()
+• Chúng ta không cần sử dụng recvfrom () để tìm hiểu người gửi của một gói dữ liệu, mà thay vào đó, read (), recv ()
+• Các lỗi không đồng bộ được trả về quy trình cho các ổ cắm UDP được kết nối
+

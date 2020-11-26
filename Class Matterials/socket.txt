@@ -1,0 +1,60 @@
+- socket: là một cổng logic để 1 chương trình giao tiếp vs 1 chương trình khác trên một máy tính khác trên mạng Internet. Chương trình mạng có thể sử dụng nhiều socket nên nhiều chương trình có thể sử dụng Internet cùng một lúc.
+* 2 loại socket:
+- stream socket: dựa trên giao thức TCP(Tranmission Control Protocol) việc truyền dữ liệu dựa chỉ thực hiện giữa 2 quá trình đã kết nối. Đảm bảo truyền đáng tin cậy, đúng thứ tự nhờ cơ chế quản lý luồng và cơ chế chống tắc nghẽn.
+- Datagram socket: dựa trên UDP(User Datagram Protocol) không yêu cầu thiết lập kết nối. Không đáng tin cậy, có thể không đúng trình tự là lặp lại. Không phải cơ chế phức tạp nên nhanh, ứng dụng trong việc truyền dữ liệu nhanh như chat, game,...
+* Port: 1 port xác định duy nhất một ứng dụng trên 1 máy trong mạng. 
+VD: Khi sử dụng Yahoo(cổng 5150) thì khi ai đó gửi tin cho bạn, máy sẽ dựa vào port để nhận biết đó là Yahoo chứ ko phải chương trình khác. Sau đó thông tin sẽ được xử lý và hiển thị tin nhắn lên.
+- TCP/IP Socket bao gồm 1 địa chỉ IP kết hợp với 1 port. IP xác định một máy duy nhất trên mạng, port xác định duy nhất một tiến trình trên máy đó.
+* Ứng dụng Client-Server là ứng dụng gồm 2 phía. Server có nhiệm vụ lắng nghe, chờ đợi kết nối từ Client với socket được quy định sẵn. Khi Client gửi request thì Server nhận dữ liệu -> xử lý -> trả lại kết quả.
+- Client là ứng dụng được phục vụ, chỉ gửi request và chờ đợi response của Server
+***
+TCP: 
+- Dùng cho mạng WAN
+- Không cho phép mất gói tin
+- Đảm bảo việc truyền dữ liệu
+- Tốc độ thấp hơn UDP
+UDP:
+- Dùng cho mạng LAN
+- Cho phép mất dữ liệu
+- Không đảm bảo
+- Tốc độ truyền cao
+****
+-TCP hoạt động theo hướng kết nối, trc khi truyền dữ liệu giữa 2 máy, cần thiết lập 1 kết nối theo phương thức three way hand shake, gửi gói tin ACK từ máy đích sang máy nhận. Trong suốt quá trình, máy gửi yêu cầu máy đích xác nhận đủ gói tin đã gửi, nếu gói tin bị mất -> yêu cầu máy gửi gửi lại, thường xuyên kiểm tra gói tin có bị lỗi hay không, cho phép quy định số lượng gói tin ttong 1 lần gửi(window sizing) -> truyền dữ liệu chậm hơn UDP.
+-UDP hoạt động theo hướng không kết nối, không có sự đảm bảo gói tin khi truyền đi cũng không thông báo về việc mất gói tin => cơ chế đơn giản, nhanh, không đán tin cậy
+
+
+
+
+* Cấu trúc địa chỉ Socket
+- Hàm socket yêu cầu 1 con trỏ trỏ đến 1 socket, con trỏ này làm đối số
+- Cấu trúc địa chỉ socket gồm thông tin socket để tạo kết nối hoặc kết nối với docket đó
+
+*API phụ trợ:
+• Tất cả các giá trị nhị phân được sắp xếp theo thứ tự byte mạng
+• htons (), htonl (), ntohs (), ntohl (): thứ tự byte
+• inet_ntoa (), inet_aton (): Chuyển đổi địa chỉ IPv4 từ chuỗi dấu chấm và số (ví dụ: 192.168.1.1) sang cấu trúc in_addr và ngược lại
+• inet_pton (), inet_ntop (): chuyển đổi IPv4 hoặc IPv6
+số giữa dạng nhị phân và dạng số, dấu chấm
+
+** Thứ tự byte:
+- đầu to(big-endian)/đầu nhỏ(little-endian)
+- htons(), htonl(): host to network short/long
+- ntohs(), ntohl(): network order to host short/long
+VD:
+#include <netinet/in.h>
+uint32_t htonl(u_long hostlong); // host to network long
+uint16_t htons(u_short hostshort);// host to network short
+uint32_t ntohl(u_long netlong); // network to host long
+uint16_t ntohs(u_short netshort); // network to host short
+Mỗi hàm sẽ trả về 1 giá trị đã đc chuyển đổi
+
+*inet_ntoa(): chuyển IP từ cấu trúc in_addr sang cấu trúc dấu chấm/số. Cấu trúc in_addr là 1 số 4byte đại diện cho mỗi chữ số trong địa chỉ IP trên mỗi byte(không bao giờ lớn hơn 255)
+
+*inet_aton(): chuyển từ địa chỉ IP từ chấm/số sang cấu trúc in_addr
++ Trả về số khác 0 nếu địa chỉ hợp lệ
++ trả về 0 nếu không hợp lệ
+
+*inet_addr(): chuyển từ địa chỉ IP từ chấm/số sang cấu trúc in_addr
++ Trả về -1 nếu có lỗi
++ Trả về địa chỉ như 1 in_addr_t
+

@@ -1,0 +1,109 @@
+***Blocking I/O Model
+- Copy hết data vào buffer -> buffer đầy mới hoàn tất copy và return OK để xử lý
+- Trong lúc Copy thì luồng sẽ bị block, copy xong mới mở.
+- Chỉ có 1 client communicate với server
+
+***Non-blocking I/O Model
+- Cũng copy data vào buffer nhưng có thể nhiều client cũng gửi data, mỗi lần copy sẽ báo lại cho server xem buffer đã đầy chưa => Không block luồng
+
+***I/O Multiplexing Model
+- Chia nhỏ thành nhiều luồng nhờ select. Trong mỗi luồng thì hoạt động như Blocking I/O Model
+
+***Signal-Driven I/O Model
+- blah blah
+
+***
+- One child per client: fork () một quy trình con để xử lý mỗi client
+- One thread per client: tạo một luồng để xử lý từng client bằng cách sử dụng pthread_create ()
+
+***Fork
+fork là một thuật ngữ trong đó một quá trình tạo ra một bản sao của chính nó
+- Hàm fork() trả về:
++ ID của tiến trình con - nếu đang ở tiến trình cha
++ 0                     - nếu đang ở tiến trình con
+
+***SIGCHLD
+• Khi một tiến trình con kết thúc, nó sẽ gửi tín hiệu SIGCHLD đến cha
+• Thông tin về tiến trình con vẫn được duy trì trong “bảng tiến trình” để cho phép cha của nó đọc được trạng thái thoát con sau đó.
+• Nếu bỏ qua SIGCHLD, tiến trình con sẽ vào trạng thái zombie
+
+***Xử lý tín hiệu SIGCHLD 
+• Mục đích của trạng thái zombie là duy trì thông tin về đứa trẻ để cha mẹ tìm nạp sau này.
+• Chúng chiếm không gian trong kernel và cuối cùng có thể thoát 
+ra khỏi kernel
+→ Bất cứ khi nào ta fork() con, chúng ta phải wait() chúng để ngăn chúng trở thành zombie → thiết lập một trình xử lý tín hiệu để bắt SIGCHLD và trong trình xử lý, gọi là wait ()
+→ Thiết lập bộ xử lý tín hiệu bằng cách thêm lệnh gọi hàm: signal (SIGCHLD, handler);
+
+
+***wait() and waitpid()
+- Tạm dừng tiến trình hiện tại và chờ cho đến khi một trong các tiến trình con của nó kết thúc.
+• Chờ sự thay đổi trạng thái của một tiến trình.
+• Sử dụng để xử lý tiến trình con bị đóng
+• Cả hai đều trả về hai giá trị:
+• Giá trị trả về của hàm:
+• ID quá trình của tiến trình con bị đóng
+• 0 hoặc -1 nếu lỗi
+• Trạng thái kết thúc của tiến trình con (số int) được trả về thông qua con trỏ statloc ().
+
+***wait()
+• Khi máy khách kết thúc, tất cả các bộ mô tả đang mở sẽ bị hạt nhân đóng tự động → năm kết nối kết thúc đồng thời
+
+***waitip()
+- Trong trường hợp trên, n - 1 tiến trình con sẽ thành zombie => ko đc
+- Dùng waitip() trong trường hợp này
+
+***waitpid ()
+pid_t waitpid (pid_t pid, int * statloc, int options);
+• pid <0: đợi bất kỳ tiến trình con nào có ID nhóm tiến trình bằng giá trị tuyệt đối của pid.
+• pid = -1: đợi bất kỳ tiến trình con nào.
+• pid = 0: đợi bất kỳ tiến trình con nào có ID nhóm tiến trình bằng với ID của tiến trình gọi
+• pid> 0: đợi con có ID tiến trình bằng giá trị của pid
+• Nếu không có tùy chọn WNOHANG, chờ đợi sẽ chặn cho đến khi trạng thái thay đổi
+• Với tùy chọn WNOHANG, người chờ return ngay lập tức
+• Return:
+• Pid của tiến trình con có trạng thái đã thay đổi
+• với tùy chọn WNOHANG, trả về 0 nếu không thay đổi trạng thái.
+
+******************************************************************
+*****MULTI-THREAD SERVER
+***pthread_create()
+#include <pthread.h>
+int pthread_create(pthread_t *tid, const pthread_attr_t *attr, void *(*routine) (void *), void *arg);
+- Tạo một luồng mới
+- Thông số:
+• [OUT] tid: trỏ đến ID của luồng
+• [IN] attr: trỏ đến cấu trúc có nội dung được sử dụng để xác định
+thuộc tính cho luồng mới
+• [IN] routine: luồng mới bắt đầu thực thi bằng cách gọi routine()
+• [IN] arg: các con trỏ đến đối số được chuyển làm đối số duy nhất của
+routine()
+- Trả về:
+• Khi thành công, trả về 0
+• Khi có lỗi, trả về số lỗi
+• Biên dịch và liên kết với -pthread
+
+***pthread_create()
+• Theo mặc định, luồng mới có thể join:
+• Không được GNU / Linux tự động dọn dẹp khi nó kết thúc
+• trạng thái thoát của luồng bị treo trong hệ thống cho đến khi
+luồng gọi pthread_join() để lấy giá trị trả về của nó
+- luồng đã đính được clean tự động khi nó chấm dứt
+• Một luồng khác có thể không nhận được giá trị trả về của nó
+- Đính 1 luồng: int pthread_detach (pthread_t tid)
+• Khi thành công, trả về 0
+• Khi có lỗi, trả về số lỗi
+
+
+***fork()
+• Nặng
+• Truyền thông tin từ cha mẹ cho con cái trước khi rẽ luồng dễ dàng
+• Trả lại thông tin từ con cho cha mất nhiều công việc hơn
+• Không cần đồng bộ hóa các quy trình
+• Tách biệt nhiều hơn giữa cha và con
+
+pthread_create ()
+• Nhẹ
+• Truyền thông tin từ một chuỗi cho những người khác dễ dàng
+• Không cần xử lý theo tín hiệu khi luồng kết thúc.
+• Có thể đồng bộ hóa các chuỗi
+• Nếu một chuỗi gặp sự cố, quá trình có thể bị lỗi
